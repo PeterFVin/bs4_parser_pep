@@ -32,7 +32,7 @@ def test_main_file():
 
 def test_whats_new(mock_session):
     got = main.whats_new(mock_session)
-    header = ('Ссылка на статью', 'Заголовок', 'Редактор, Автор')
+    header = ('Ссылка на статью', 'Заголовок', 'Редактор, автор')
     assert isinstance(got, list), (
         'Функция `whats_new` должна возвращать объект типа `list`'
     )
@@ -47,7 +47,7 @@ def test_whats_new(mock_session):
     assert header in got, (
         'В функции `whats_new` в списке `result` первым элементом '
         'должен быть кортеж '
-        '(`Ссылка на статью`, `Заголовок`, `Редактор, Автор`)'
+        '(`Ссылка на статью`, `Заголовок`, `Редактор, автор`)'
     )
 
 

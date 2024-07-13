@@ -66,20 +66,14 @@ def latest_versions(session):
     results = [('Ссылка на документацию', 'Версия', 'Статус')]
     for a_tag in a_tags:
         link = a_tag['href']
-        text = a_tag.text
-        text_match = re.search(pattern, text)
-        match text_match:
-            case re.Match():
-                version, status = text_match.group(1, 2)
-                results.append(
-                    (link, version, status)
-                    )
-            case _:
-                version = text
-                status = ''
-                results.append(
-                    (link, version, status)
-                    )
+        text_match = re.search(pattern, a_tag.text)
+        if text_match is not None:
+            version, status = text_match.groups()
+        else:
+            version, status = a_tag.text, ''
+        results.append(
+            (link, version, status)
+        )
     return results
 
 

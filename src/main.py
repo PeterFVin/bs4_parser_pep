@@ -8,7 +8,6 @@ from tqdm import tqdm
 from urllib.parse import urljoin
 
 from constants import (BASE_DIR,
-                       DOWNLOADS_DIR,
                        EXPECTED_STATUS,
                        MAIN_DOC_URL,
                        MAIN_PEP_URL)
@@ -94,6 +93,7 @@ def download(session):
                                  href=re.compile(r'.+pdf-a4\.zip$'))['href']
     archive_url = urljoin(downloads_url, pdf_a4_link)
     filename = archive_url.split('/')[-1]
+    DOWNLOADS_DIR = BASE_DIR / 'downloads'
     DOWNLOADS_DIR.mkdir(exist_ok=True)
     archive_path = DOWNLOADS_DIR / filename
     response = session.get(archive_url)

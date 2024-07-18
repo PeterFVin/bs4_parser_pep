@@ -7,11 +7,28 @@
 
 ### Использованные технологии: 
 
- - beautifulsoup4==4.9.3
- - lxml==4.6.3
- - logging
+ - python==3.11.3
+ - beautifulsoup4
 
  ### Автор проекта:
 
 Петр Виноградов, python plus, когорта 31+
+https://github.com/PeterFVin
 
+### Как запустить проект: 
+
+Установить зависимости из файла requirements.txt:
+
+```
+pip install -r requirements.txt
+```
+
+Запустить проект:
+
+```
+python src/main.py pep
+
+
+### Справка по проекту:
+
+python src/main.py -h

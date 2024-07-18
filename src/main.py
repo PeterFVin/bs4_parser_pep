@@ -7,7 +7,8 @@ import requests_cache
 from tqdm import tqdm
 from urllib.parse import urljoin
 
-from constants import (DOWNLOADS_DIR,
+from constants import (BASE_DIR,
+                       DOWNLOADS_DIR,
                        EXPECTED_STATUS,
                        MAIN_DOC_URL,
                        MAIN_PEP_URL)

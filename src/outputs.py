@@ -4,7 +4,7 @@ import logging
 
 from prettytable import PrettyTable
 
-from constants import DATETIME_FORMAT, RESULTS_DIR
+from constants import BASE_DIR, DATETIME_FORMAT, RESULTS_DIR
 from phrazes import FILE_OUTPUT
 
 

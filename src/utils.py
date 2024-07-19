@@ -1,7 +1,7 @@
 from exceptions import ParserFindTagException
-from requests import RequestException
 
-from phrazes import ERROR_MESSAGE, REQUEST_EXCEPTION_TEXT
+ERROR_MESSAGE = 'Не найден тег {} {}'
+REQUEST_EXCEPTION_TEXT = 'Возникла ошибка при загрузке страницы {}: {}'
 
 
 def get_response(session, url, encoding='utf-8'):
@@ -9,8 +9,8 @@ def get_response(session, url, encoding='utf-8'):
         response = session.get(url)
         response.encoding = encoding
         return response
-    except RequestException:
-        raise RequestException(REQUEST_EXCEPTION_TEXT.format(url))
+    except RuntimeError as e:
+        raise RuntimeError(REQUEST_EXCEPTION_TEXT.format(url, e))
 
 
 def find_tag(soup, tag, attrs=None):

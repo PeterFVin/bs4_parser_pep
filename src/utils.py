@@ -1,7 +1,9 @@
+from bs4 import BeautifulSoup
+
 from exceptions import ParserFindTagException
 
 ERROR_MESSAGE = 'Не найден тег {} {}'
-REQUEST_EXCEPTION_TEXT = 'Возникла ошибка при загрузке страницы {}: {}'
+CONNECTION_ERROR_TEXT = 'Возникла ошибка при загрузке страницы {}: {}'
 
 
 def get_response(session, url, encoding='utf-8'):
@@ -9,8 +11,8 @@ def get_response(session, url, encoding='utf-8'):
         response = session.get(url)
         response.encoding = encoding
         return response
-    except RuntimeError as e:
-        raise RuntimeError(REQUEST_EXCEPTION_TEXT.format(url, e))
+    except ConnectionError as e:
+        raise ConnectionError(CONNECTION_ERROR_TEXT.format(url, e))
 
 
 def find_tag(soup, tag, attrs=None):
@@ -19,3 +21,8 @@ def find_tag(soup, tag, attrs=None):
         error_message = ERROR_MESSAGE.format(tag, attrs)
         raise ParserFindTagException(error_message)
     return searched_tag
+
+
+def get_soup(session, url, features='lxml'):
+    response = get_response(session, url)
+    return BeautifulSoup(response.text, features=features)

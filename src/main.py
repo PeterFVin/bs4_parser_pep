@@ -1,43 +1,34 @@
 from collections import defaultdict
 import logging
 import re
+from urllib.parse import urljoin
 
-from bs4 import BeautifulSoup
 import requests_cache
 from tqdm import tqdm
-from urllib.parse import urljoin
 
 from exceptions import ParserFindTagException, UrlNotFoundException
 from constants import (BASE_DIR,
                        EXPECTED_STATUS,
                        MAIN_DOC_URL,
-                       MAIN_PEP_URL)
+                       MAIN_PEP_URL,
+                       WHATS_NEW_URL)
 from configs import configure_argument_parser, configure_logging
 from outputs import control_output
-from utils import find_tag, get_response
+from utils import find_tag, get_soup
 
 
 ARGUMENTS = 'Аргументы командной строки: {}'
+DOWNLOADS_FOLDER = 'downloads'
 DOWNLOAD_ARCHIVE = 'Архив был загружен и сохранён: {}'
-DOWNLOADS_DIR = BASE_DIR / 'downloads'
 EXCEPTION_TEXT = 'Возникло исключение: {}'
 PARSER_OFF = 'Парсер завершил работу.'
 PARSER_ON = 'Парсер запущен!'
 TAG_FIND_ERROR = 'Тег {} не найден!'
 TAG_TEXT_FIND_ERROR = 'All versions не найден!'
 URL_ERROR_TEXT = 'Не удалось обработать url {}: {}'
-WHATS_NEW_URL = urljoin(MAIN_DOC_URL, 'whatsnew/')
 WRONG_STATUSES_BODY = '\n{}\nСтатус в карточке: {}\nОжидаемые статусы: {}'
 WRONG_STATUSES_END = '\nНесовпадающие статусы отсутствуют!'
 WRONG_STATUSES_HEAD = 'Несовпадающие статусы:'
-
-
-def get_soup(session, url, features='lxml'):
-    response = get_response(session, url)
-    response.encoding = 'utf-8'
-    if response is None:
-        return
-    return BeautifulSoup(response.text, features=features)
 
 
 def whats_new(session):
@@ -46,6 +37,7 @@ def whats_new(session):
         url=WHATS_NEW_URL).select(
             '#what-s-new-in-python div.toctree-wrapper li.toctree-l1 > a'))
     results = [('Ссылка на статью', 'Заголовок', 'Редактор, автор')]
+    logging_message = ''
     for a_tag in tqdm(a_tags):
         href = a_tag['href']
         version_link = urljoin(WHATS_NEW_URL, href)
@@ -56,11 +48,13 @@ def whats_new(session):
             dl = get_soup(session, url=version_link).find('dl')
             if dl is None:
                 raise ParserFindTagException(TAG_FIND_ERROR.format(dl))
-        except UrlNotFoundException as e:
-            logging.error(URL_ERROR_TEXT.format(version_link, e))
+        except ParserFindTagException as e:
+            logging_message += URL_ERROR_TEXT.format(version_link, e) + '\n'
             continue
         dl_text = dl.text.replace('\n', ' ')
         results.append((version_link, h1.text, dl_text))
+    if logging_message:
+        logging.error(logging_message)
 
     return results
 
@@ -74,8 +68,8 @@ def latest_versions(session):
         if 'All versions' in ul.text:
             a_tags = ul.find_all('a')
             break
-        else:
-            raise ParserFindTagException(TAG_TEXT_FIND_ERROR)
+    else:
+        raise ParserFindTagException(TAG_TEXT_FIND_ERROR)
     pattern = r'Python (?P<version>\d\.\d+) \((?P<status>.*)\)'
     results = [('Ссылка на документацию', 'Версия', 'Статус')]
     for a_tag in a_tags:
@@ -98,7 +92,7 @@ def download(session):
                                  href=re.compile(r'.+pdf-a4\.zip$'))['href']
     archive_url = urljoin(downloads_url, pdf_a4_link)
     filename = archive_url.split('/')[-1]
-    DOWNLOADS_DIR = BASE_DIR / 'downloads'
+    DOWNLOADS_DIR = BASE_DIR / DOWNLOADS_FOLDER
     DOWNLOADS_DIR.mkdir(exist_ok=True)
     archive_path = DOWNLOADS_DIR / filename
     response = session.get(archive_url)
@@ -119,8 +113,9 @@ def pep(session):
     tbody = table.find('tbody')
     tr_tags = tbody.find_all('tr')
     results = defaultdict(int)
-    logging_message = WRONG_STATUSES_HEAD
+    logging_message_status = WRONG_STATUSES_HEAD
     errors_counter = 0
+    logging_message_url = ''
     for tr in tr_tags:
         td = tr.find_all('td')
         status_letter = (td[0].text[1]) if len(td[0].text) > 1 else ''
@@ -133,7 +128,7 @@ def pep(session):
             if section is None:
                 raise ParserFindTagException(TAG_FIND_ERROR.format(section))
         except UrlNotFoundException as e:
-            logging.error(URL_ERROR_TEXT.format(pep_link, e))
+            logging_message_url += URL_ERROR_TEXT.format(pep_link, e) + '\n'
             continue
         dt_tags = section.find_all('dt')
         for dt in dt_tags:
@@ -141,7 +136,7 @@ def pep(session):
                 status_value = dt.find_next_sibling('dd').get_text(
                     strip=True)
         if status_value not in EXPECTED_STATUS[status_letter]:
-            logging_message += (
+            logging_message_status += (
                 WRONG_STATUSES_BODY.format(
                     pep_link,
                     status_value,
@@ -149,8 +144,10 @@ def pep(session):
             errors_counter += 1
         results[status_value] += 1
     if errors_counter == 0:
-        logging_message += WRONG_STATUSES_END
-    logging.info(logging_message)
+        logging_message_status += WRONG_STATUSES_END
+    if logging_message_url:
+        logging.error(logging_message_url)
+    logging.info(logging_message_status)
     return [
         ('Статус', 'Количество'),
         *results.items(),
@@ -181,8 +178,8 @@ def main():
         if results is not None:
             control_output(results, args)
         logging.info(PARSER_OFF)
-    except Exception as Argument:
-        logging.exception(EXCEPTION_TEXT.format(Argument))
+    except Exception as e:
+        logging.exception(EXCEPTION_TEXT.format(e))
 
 
 if __name__ == '__main__':

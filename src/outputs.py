@@ -6,13 +6,12 @@ from prettytable import PrettyTable
 
 from constants import BASE_DIR, DATETIME_FORMAT
 
-CONTROL_OUTPUT_PRETTY = 'pretty'
-CONTROL_OUTPUT_FILE = 'file'
 FILE_OUTPUT = 'Файл с результатами был сохранён: {}'
+RESULTS_FOLDER = 'results'
 
 
 def control_output(results, cli_args):
-    outputs[cli_args.output](results, cli_args)
+    OUTPUTS[cli_args.output](results, cli_args)
 
 
 def default_output(results, cli_args):
@@ -29,7 +28,7 @@ def pretty_output(results, cli_args):
 
 
 def file_output(results, cli_args):
-    RESULTS_DIR = BASE_DIR / 'results'
+    RESULTS_DIR = BASE_DIR / RESULTS_FOLDER
     RESULTS_DIR.mkdir(exist_ok=True)
     parser_mode = cli_args.mode
     now_formatted = dt.datetime.now().strftime(DATETIME_FORMAT)
@@ -40,10 +39,8 @@ def file_output(results, cli_args):
     logging.info(FILE_OUTPUT.format(file_path))
 
 
-outputs = {
-    CONTROL_OUTPUT_PRETTY: lambda results, cli_args: pretty_output(results,
-                                                                   cli_args),
-    CONTROL_OUTPUT_FILE: lambda results, cli_args: file_output(results,
-                                                               cli_args),
-    None: lambda results, cli_args: default_output(results, cli_args)
+OUTPUTS = {
+    'pretty': pretty_output,
+    'file': file_output,
+    None: default_output
 }

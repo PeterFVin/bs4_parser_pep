@@ -9,7 +9,6 @@ from constants import BASE_DIR, DATETIME_FORMAT
 CONTROL_OUTPUT_PRETTY = 'pretty'
 CONTROL_OUTPUT_FILE = 'file'
 FILE_OUTPUT = 'Файл с результатами был сохранён: {}'
-RESULTS_DIR = BASE_DIR / 'results'
 
 
 def control_output(results, cli_args):
@@ -30,6 +29,7 @@ def pretty_output(results, cli_args):
 
 
 def file_output(results, cli_args):
+    RESULTS_DIR = BASE_DIR / 'results'
     RESULTS_DIR.mkdir(exist_ok=True)
     parser_mode = cli_args.mode
     now_formatted = dt.datetime.now().strftime(DATETIME_FORMAT)

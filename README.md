@@ -13,9 +13,14 @@
  ### Автор проекта:
 
 Петр Виноградов, python plus, когорта 31+
-https://github.com/PeterFVin
+[[github:PeterFVin]]
 
-### Как запустить проект: 
+### Как запустить проект:
+
+Клонировать репозиторий:
+
+```
+git clone https://github.com/PeterFVin/bs4_parser_pep.git
 
 Установить зависимости из файла requirements.txt:
 

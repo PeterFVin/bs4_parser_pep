@@ -13,7 +13,7 @@ def get_response(session, url, encoding='utf-8'):
         response.encoding = encoding
         return response
     except RequestException as e:
-        raise RuntimeError(ERROR_TEXT.format(url, e))
+        raise ConnectionError(ERROR_TEXT.format(url, e))
 
 
 def find_tag(soup, tag, attrs=None):

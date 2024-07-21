@@ -42,11 +42,12 @@ def whats_new(session):
         href = a_tag['href']
         version_link = urljoin(WHATS_NEW_URL, href)
         try:
-            h1 = find_tag(get_soup(session, url=version_link), 'h1')
-            dl = get_soup(session, url=version_link).find('dl')
-        except ValueError as e:
+            soup = get_soup(session, url=version_link)
+        except ConnectionError as e:
             logging_message.append(URL_ERROR_TEXT.format(version_link, e))
             continue
+        h1 = find_tag(soup, 'h1')
+        dl = soup.find('dl')
         dl_text = dl.text.replace('\n', ' ')
         results.append((version_link, h1.text, dl_text))
     if logging_message:

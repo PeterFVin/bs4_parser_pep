@@ -7,11 +7,9 @@ from prettytable import PrettyTable
 from constants import BASE_DIR, DATETIME_FORMAT
 
 FILE_OUTPUT = 'Файл с результатами был сохранён: {}'
+OUTPUT_PRETTY = 'file'
+OUTPUT_PRETTY = 'pretty'
 RESULTS_FOLDER = 'results'
-
-
-def control_output(results, cli_args):
-    OUTPUTS[cli_args.output](results, cli_args)
 
 
 def default_output(results, cli_args):
@@ -40,7 +38,11 @@ def file_output(results, cli_args):
 
 
 OUTPUTS = {
-    'pretty': pretty_output,
+    OUTPUT_PRETTY: pretty_output,
     'file': file_output,
     None: default_output
 }
+
+
+def control_output(results, cli_args):
+    OUTPUTS[cli_args.output](results, cli_args)

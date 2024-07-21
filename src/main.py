@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 import requests_cache
 from tqdm import tqdm
 
-from exceptions import ParserFindTagException, UrlNotFoundException
+from exceptions import ParserFindTagException
 from constants import (BASE_DIR,
                        EXPECTED_STATUS,
                        MAIN_DOC_URL,
@@ -37,24 +37,20 @@ def whats_new(session):
         url=WHATS_NEW_URL).select(
             '#what-s-new-in-python div.toctree-wrapper li.toctree-l1 > a'))
     results = [('Ссылка на статью', 'Заголовок', 'Редактор, автор')]
-    logging_message = ''
+    logging_message = []
     for a_tag in tqdm(a_tags):
         href = a_tag['href']
         version_link = urljoin(WHATS_NEW_URL, href)
         try:
             h1 = find_tag(get_soup(session, url=version_link), 'h1')
-            if h1 is None:
-                raise ParserFindTagException(TAG_FIND_ERROR.format(h1))
             dl = get_soup(session, url=version_link).find('dl')
-            if dl is None:
-                raise ParserFindTagException(TAG_FIND_ERROR.format(dl))
-        except ParserFindTagException as e:
-            logging_message += URL_ERROR_TEXT.format(version_link, e) + '\n'
+        except ValueError as e:
+            logging_message.append(URL_ERROR_TEXT.format(version_link, e))
             continue
         dl_text = dl.text.replace('\n', ' ')
         results.append((version_link, h1.text, dl_text))
     if logging_message:
-        logging.error(logging_message)
+        logging.error('\n'.join(logging_message))
 
     return results
 
@@ -115,7 +111,7 @@ def pep(session):
     results = defaultdict(int)
     logging_message_status = WRONG_STATUSES_HEAD
     errors_counter = 0
-    logging_message_url = ''
+    logging_message_url = []
     for tr in tr_tags:
         td = tr.find_all('td')
         status_letter = (td[0].text[1]) if len(td[0].text) > 1 else ''
@@ -125,10 +121,8 @@ def pep(session):
             section = get_soup(session, pep_link).find(
                 'section',
                 {'id': 'pep-content'})
-            if section is None:
-                raise ParserFindTagException(TAG_FIND_ERROR.format(section))
-        except UrlNotFoundException as e:
-            logging_message_url += URL_ERROR_TEXT.format(pep_link, e) + '\n'
+        except ValueError as e:
+            logging_message_url.append(URL_ERROR_TEXT.format(pep_link, e))
             continue
         dt_tags = section.find_all('dt')
         for dt in dt_tags:
@@ -146,7 +140,7 @@ def pep(session):
     if errors_counter == 0:
         logging_message_status += WRONG_STATUSES_END
     if logging_message_url:
-        logging.error(logging_message_url)
+        logging.error('\n'.join(logging_message_url))
     logging.info(logging_message_status)
     return [
         ('Статус', 'Количество'),
